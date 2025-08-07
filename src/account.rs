@@ -1,6 +1,6 @@
 use crate::error::{Error, ErrorKind, Result};
 use crate::models::account::{AccountHistory, AccountList, Balance, Position, UserInfo};
-use crate::models::quote::{MarketTime, SingleQuoteResponse};
+use crate::models::quote::{MarketTime, Mohlc, SingleQuoteResponse};
 use crate::models::session::LoginVerifiedResponse;
 use crate::models::watchlist::{WatchListQuote, WatchListResponse, WatchLists};
 use crate::session::*;
@@ -198,6 +198,12 @@ impl FtAccount {
 
     pub async fn single_quote(&self, symbol: String) -> Result<SingleQuoteResponse> {
         let url = single_quote(self.account_id.as_str(), symbol.as_str());
+        let cred = self.cred.read().await;
+        get_with_auth(&self.client, url, &cred).await
+    }
+
+    pub async fn stock_mohlc(&self, symbols: String, resolution: u8) -> Result<Mohlc> {
+        let url = stock_mohlc(symbols.as_str(), resolution);
         let cred = self.cred.read().await;
         get_with_auth(&self.client, url, &cred).await
     }

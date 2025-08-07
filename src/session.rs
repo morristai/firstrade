@@ -1,7 +1,7 @@
 use crate::error::{Error, ErrorKind, Result};
 use crate::models::account::AccountList;
 use crate::models::session::{LoginMfaRequest, LoginResponse};
-use crate::url::{account_list, login, verify_pin, ACCESS_TOKEN};
+use crate::url::{ACCESS_TOKEN, account_list, login, verify_pin};
 use crate::utils::*;
 use async_recursion::async_recursion;
 use axum::http::{HeaderMap, HeaderValue};
