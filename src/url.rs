@@ -79,10 +79,30 @@ pub fn single_quote(account: &str, symbol: &str) -> String {
     format!("{FT_HOST}/public/quote?account={account}&q={symbol}")
 }
 
+#[inline(always)]
+pub fn fundamental(symbol: &str) -> String {
+    format!("{FT_HOST}/public/fundamental?symbol={symbol}")
+}
+
+#[inline(always)]
+pub fn company_profile(symbol: &str) -> String {
+    format!("{FT_HOST}/public/company_profile?q={symbol}")
+}
+
+#[inline(always)]
+pub fn cash_dividend(symbol: &str) -> String {
+    format!("{FT_HOST}/private/cash_dividend?q={symbol}")
+}
+
 // NOTE: symbols should be a comma-separated list of symbols
 // e.g. "AAPL,GOOGL,MSFT"
 // resolution must be less than or equal to 50
 #[inline(always)]
 pub fn stock_mohlc(symbols: &str, resolution: u8) -> String {
     format!("{FT_HOST}/public/mohlc?symbols={symbols}&resolution={resolution}")
+}
+
+#[inline(always)]
+pub fn corp_calendar(symbol: &str) -> String {
+    format!("{FT_HOST}/private/corp_calendar?q={symbol}")
 }

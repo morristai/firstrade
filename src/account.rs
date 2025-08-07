@@ -1,6 +1,6 @@
 use crate::error::{Error, ErrorKind, Result};
 use crate::models::account::{AccountHistory, AccountList, Balance, Position, UserInfo};
-use crate::models::quote::{MarketTime, Mohlc, SingleQuoteResponse};
+use crate::models::quote::{CashDividendResponse, CompanyProfile, CompanyProfileResponse, CorpCalendarResponse, Fundamental, FundamentalResponse, MarketTimeResponse, MohlcResponse, SingleQuoteResponse};
 use crate::models::session::LoginVerifiedResponse;
 use crate::models::watchlist::{WatchListQuote, WatchListResponse, WatchLists};
 use crate::session::*;
@@ -105,7 +105,7 @@ impl FtAccount {
 }
 
 impl FtAccount {
-    pub async fn get_market_time(&self) -> Result<MarketTime> {
+    pub async fn get_market_time(&self) -> Result<MarketTimeResponse> {
         let response = self.client.get(market_time()).send().await.map_err(|e| {
             Error::new(ErrorKind::Unexpected, "Failed to send get_market_time request")
                 .with_context("response", e.to_string())
@@ -202,8 +202,32 @@ impl FtAccount {
         get_with_auth(&self.client, url, &cred).await
     }
 
-    pub async fn stock_mohlc(&self, symbols: String, resolution: u8) -> Result<Mohlc> {
+    pub async fn stock_mohlc(&self, symbols: String, resolution: u8) -> Result<MohlcResponse> {
         let url = stock_mohlc(symbols.as_str(), resolution);
+        let cred = self.cred.read().await;
+        get_with_auth(&self.client, url, &cred).await
+    }
+
+    pub async fn fundamental(&self, symbol: String) -> Result<FundamentalResponse> {
+        let url = fundamental(symbol.as_str());
+        let cred = self.cred.read().await;
+        get_with_auth(&self.client, url, &cred).await
+    }
+
+    pub async fn company_profile(&self, symbol: String) -> Result<CompanyProfileResponse> {
+        let url = company_profile(symbol.as_str());
+        let cred = self.cred.read().await;
+        get_with_auth(&self.client, url, &cred).await
+    }
+
+    pub async fn cash_dividend(&self, symbol: String) -> Result<CashDividendResponse> {
+        let url = cash_dividend(symbol.as_str());
+        let cred = self.cred.read().await;
+        get_with_auth(&self.client, url, &cred).await
+    }
+
+    pub async fn corp_calendar(&self, symbol: String) -> Result<CorpCalendarResponse> {
+        let url = corp_calendar(symbol.as_str());
         let cred = self.cred.read().await;
         get_with_auth(&self.client, url, &cred).await
     }

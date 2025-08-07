@@ -4,10 +4,10 @@ use anyhow::{Result, anyhow};
 use axum::Json;
 use axum::extract::{Path, State};
 use firstrade::models::account::{AccountHistory, AccountList, BalanceResult, Position, UserInfo};
-use firstrade::models::quote::MarketTime;
+use firstrade::models::quote::MarketTimeResponse;
 use firstrade::models::watchlist::*;
 
-pub(crate) async fn market_time(State(state): State<AppState>) -> Result<Json<MarketTime>, AppError> {
+pub(crate) async fn market_time(State(state): State<AppState>) -> Result<Json<MarketTimeResponse>, AppError> {
     let market_time = state.ft_client.get_market_time().await?;
     Ok(Json(market_time))
 }
