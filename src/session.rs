@@ -89,7 +89,6 @@ impl FtCreds {
     }
 }
 
-// TODO: from Map
 #[derive(Clone, TypedBuilder)]
 pub struct FtSessionConfig {
     log_level: log::Level,
