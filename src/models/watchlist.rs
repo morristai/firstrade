@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 // ==================== WatchList ====================
 #[derive(Serialize, Deserialize)]
-pub struct WatchLists {
+pub struct WatchListResponse {
     #[serde(rename = "statusCode")]
     #[serde(with = "http_serde::status_code")]
     pub status_code: StatusCode,
@@ -22,17 +22,17 @@ pub struct WatchList {
 
 // ==================== WatchListQuote ====================
 #[derive(Serialize, Deserialize)]
-pub struct WatchListQuote {
+pub struct WatchListQuoteResponse {
     #[serde(rename = "statusCode")]
     #[serde(with = "http_serde::status_code")]
     pub status_code: StatusCode,
     pub error: String,
     pub message: String,
-    pub result: Option<WatchListQuoteList>,
+    pub result: Option<WatchListQuote>,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct WatchListQuoteList {
+pub struct WatchListQuote {
     pub list_id: i64,
     pub name: String,
     pub list_items: Vec<ItemQuote>,
@@ -67,7 +67,7 @@ pub struct ItemQuote {
 // ==================== AddWatchListResponse ====================
 
 #[derive(Serialize, Deserialize)]
-pub struct WatchListResponse {
+pub struct AddWatchListResponse {
     #[serde(rename = "statusCode")]
     #[serde(with = "http_serde::status_code")]
     pub status_code: StatusCode,
@@ -114,7 +114,7 @@ mod tests {
                 "result": "success"
             }
         });
-        let result: WatchListResponse = serde_json::from_value(json_data).unwrap();
+        let result: AddWatchListResponse = serde_json::from_value(json_data).unwrap();
         assert_eq!(result.status_code, StatusCode::OK);
         assert_eq!(result.error, "");
         assert_eq!(result.message, "Normal");

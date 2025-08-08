@@ -9,7 +9,6 @@ use derive_more::From;
 use reqwest::Client as HttpClient;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use typed_builder::TypedBuilder;
 use zeroize::Zeroize;
 
 #[derive(Clone, Debug, From)]
@@ -36,6 +35,10 @@ pub(crate) struct FirstTradeAccessToken(String);
 impl FirstTradeAccessToken {
     pub(crate) fn as_str(&self) -> &str {
         &self.0
+    }
+
+    pub(crate) fn as_string(&self) -> String {
+        self.0.clone()
     }
 }
 
@@ -87,9 +90,17 @@ impl FtCreds {
     pub fn get_sid(&self) -> String {
         self.sid.0.clone()
     }
+
+    pub fn set_ftat(&mut self, ftat: String) {
+        self.ftat = FirstTradeAccessToken(ftat);
+    }
+
+    pub fn set_sid(&mut self, sid: String) {
+        self.sid = SessionId(sid);
+    }
 }
 
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone)]
 pub struct FtSessionConfig {
     log_level: log::Level,
     username: Option<String>,
@@ -152,6 +163,11 @@ impl FtSessionConfig {
         self.mfa_code = Some(mfa_code);
         self
     }
+
+    pub fn set_otp_code(&mut self, otp: String) -> &mut Self {
+        self.mfa_code = Some(otp);
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -202,7 +218,7 @@ impl FtSession {
         }
     }
 
-    pub async fn init_login(&mut self) -> Result<()> {
+    pub async fn login(&mut self) -> Result<()> {
         let mut headers = HeaderMap::new();
         if let Some(ftat) = &self.ft_config.ftat {
             headers.insert("ftat", HeaderValue::from_str(ftat).unwrap());
@@ -238,15 +254,15 @@ impl FtSession {
     async fn login_verify(&mut self, resp: LoginResponse) -> Result<()> {
         match resp {
             LoginResponse::Otp(_data) => {
+                log::error!("OTP login is not supported yet");
                 unimplemented!()
             }
             LoginResponse::Mfa(data) => {
+                log::debug!("using MFA for login");
                 let t_token = data.t_token;
-                let mfa_code = self
-                    .ft_config
-                    .mfa_code
-                    .clone()
-                    .ok_or(login_credential_error("mfa_code"))?;
+                let mfa_code = self.ft_config.mfa_code.clone().ok_or(login_credential_error(
+                    "possible ftat is expired, need mfa to re-login",
+                ))?;
 
                 let body = LoginMfaRequest::builder()
                     .t_token(t_token)
@@ -274,6 +290,7 @@ impl FtSession {
                 Ok(Self::login_verify(self, data).await?)
             }
             LoginResponse::Verify(data) => {
+                log::info!("login verified successfully");
                 let username = self.ft_config.username.clone().unwrap();
                 let password = self.ft_config.password.clone().unwrap();
                 let ft_cred = FtCreds {

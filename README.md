@@ -1,7 +1,6 @@
 # Firstrade SDK
 
-A reverse-engineered API client for Firstrade — a financial services company providing brokerage services.  
-This SDK enables interaction with Firstrade's API for operations such as logging in, retrieving account data, executing trades, and more.
+A reverse-engineered API client for Firstrade — a financial services company providing brokerage services.
 
 ---
 
@@ -12,11 +11,11 @@ This SDK enables interaction with Firstrade's API for operations such as logging
 - [x] Retrieve account information
 - [x] Retrieve market data
 - [x] Retrieve and modify watchlists
-- [x] Fully asynchronous operations
+- [x] Async support
 - [x] Retrieve trade history
-- [ ] Place trades
-- [ ] Support for options trading
-- [ ] Python bindings (planned)
+- [ ] Full stock orders
+- [ ] Full options orders
+- [ ] Python bindings
 
 ---
 

@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 
     let builder = FtSessionBuilder::new(ft_config)?;
     let mut session = FtSession::from_builder(builder);
-    session.init_login().await?;
+    session.login().await?;
 
     let accounts = session.get_account_list().await?;
     let account_id = accounts

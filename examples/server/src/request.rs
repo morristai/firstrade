@@ -58,7 +58,7 @@ pub(crate) async fn account_watchlists(
 pub(crate) async fn watchlist_quote(
     Path(watchlist_id): Path<u32>,
     State(state): State<AppState>,
-) -> Result<Json<WatchListQuoteList>, AppError> {
+) -> Result<Json<WatchListQuote>, AppError> {
     let watchlist_quote = state.ft_client.get_watchlist_quote(watchlist_id).await?;
     let watchlist_quote = watchlist_quote
         .result
@@ -70,7 +70,7 @@ pub(crate) async fn watchlist_quote(
 pub(crate) async fn add_new_watchlist(
     Path(name): Path<String>,
     State(state): State<AppState>,
-) -> Result<Json<WatchListResponse>, AppError> {
+) -> Result<Json<AddWatchListResponse>, AppError> {
     let response = state.ft_client.add_new_watchlist(name).await?;
 
     Ok(Json(response))
