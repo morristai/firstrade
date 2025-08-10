@@ -40,7 +40,7 @@ pub(crate) fn read_response_error(err: reqwest::Error) -> Error {
 
 #[inline]
 pub(crate) fn parse_json_error(err: serde_json::Error) -> Error {
-    Error::new(ErrorKind::Unexpected, "parsing login response").with_context("response_body", err)
+    Error::new(ErrorKind::Unexpected, "parsing response").with_context("response_body", err)
 }
 
 pub(crate) async fn handle_failed_response(resp: Response) -> Error {

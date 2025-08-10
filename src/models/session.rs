@@ -21,8 +21,7 @@ pub(crate) struct LoginErrorResponse {
 
 #[derive(Serialize, Deserialize, TypedBuilder)]
 pub(crate) struct LoginOtpRequest {
-    // TODO
-    #[serde(rename = "mfaCode")]
+    #[serde(rename = "optCode")]
     pub otp_code: String,
     pub remember_for: i64,
     pub t_token: String,

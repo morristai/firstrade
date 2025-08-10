@@ -29,8 +29,6 @@ pub struct AccountItems {
 }
 
 // =================== User Info ====================
-
-// TODO: error response handling
 #[derive(Serialize, Deserialize)]
 pub struct UserInfo {
     pub sid: String,

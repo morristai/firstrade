@@ -1,18 +1,22 @@
+use chrono::serde::ts_milliseconds::deserialize as from_milli_ts;
+use chrono::{DateTime, Utc};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize)]
-pub struct MarketTime {
+// ==================== Market Time ====================
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MarketTimeResponse {
     #[serde(rename = "statusCode")]
     #[serde(with = "http_serde::status_code")]
     pub status_code: StatusCode,
     pub error: String,
     pub message: String,
-    pub result: Option<MarketTimeResult>,
+    pub result: Option<MarketTime>,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct MarketTimeResult {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MarketTime {
     pub is_trading_date: bool,
     pub seconds_till_open: Option<i64>,
     pub seconds_since_close: Option<i64>,
@@ -20,8 +24,7 @@ pub struct MarketTimeResult {
     pub current_date_dash: String,
 }
 
-// ==================== Quote Response ====================
-
+// ==================== Single Quote ====================
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SingleQuoteResponse {
     #[serde(rename = "statusCode")]
@@ -29,18 +32,18 @@ pub struct SingleQuoteResponse {
     pub status_code: StatusCode,
     pub error: String,
     pub message: String,
-    pub result: Option<Result>,
+    pub result: Option<QuoteResult>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum Result {
-    Stock(StockResult),
-    Option(OptionResult),
+pub enum QuoteResult {
+    Stock(StockQuote),
+    Option(OptionQuote),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OptionResult {
+pub struct OptionQuote {
     pub symbol: String,
     pub sec_type: u8,
     pub underlying_symbol: String,
@@ -65,7 +68,7 @@ pub struct OptionResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StockResult {
+pub struct StockQuote {
     pub symbol: String,
     pub sec_type: u8,
     pub tick: String,
@@ -104,6 +107,39 @@ pub struct StockResult {
     pub shares: u64,
 }
 
+// ==================== Stock OHLC ====================
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MohlcResponse {
+    #[serde(rename = "statusCode")]
+    #[serde(with = "http_serde::status_code")]
+    pub status_code: StatusCode,
+    pub error: String,
+    pub message: String,
+    pub result: Option<HashMap<String, StockOhlc>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StockOhlc {
+    pub ohlc: Vec<OhlcEntry>,
+    pub vol: Vec<VolEntry>,
+    pub prev_close: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OhlcEntry(
+    #[serde(deserialize_with = "from_milli_ts")] pub DateTime<Utc>,
+    pub f64,
+    pub f64,
+    pub f64,
+    pub f64,
+);
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VolEntry(
+    #[serde(deserialize_with = "from_milli_ts")] pub DateTime<Utc>,
+    pub f64,
+);
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,7 +159,7 @@ mod tests {
             }
         });
 
-        let response: MarketTime = serde_json::from_value(json_data).unwrap();
+        let response: MarketTimeResponse = serde_json::from_value(json_data).unwrap();
         assert_eq!(response.status_code, StatusCode::OK);
         assert!(response.result.unwrap().is_trading_date);
     }
@@ -177,7 +213,7 @@ mod tests {
         let response: SingleQuoteResponse = serde_json::from_value(json_data).unwrap();
         assert_eq!(response.status_code, 200);
         match response.result.unwrap() {
-            Result::Stock(stock) => {
+            QuoteResult::Stock(stock) => {
                 assert_eq!(stock.symbol, "HIMS");
                 assert_eq!(stock.sec_type, 1);
                 assert_eq!(stock.exchange, "NYSE");
@@ -220,7 +256,7 @@ mod tests {
         assert_eq!(response.status_code, 200);
 
         match response.result.unwrap() {
-            Result::Option(option) => {
+            QuoteResult::Option(option) => {
                 assert_eq!(option.symbol, "OSCR270115C00010000");
                 assert_eq!(option.sec_type, 2);
                 assert_eq!(option.underlying_symbol, "OSCR");
@@ -228,6 +264,188 @@ mod tests {
                 assert_eq!(option.exchange, "OPRA");
             }
             _ => panic!("Expected OptionResult"),
+        }
+    }
+
+    #[test]
+    fn test_stock_ohlc_response() {
+        let raw_json = r#"{
+            "statusCode": 200,
+            "error": "",
+            "message": "Normal",
+            "result": {
+                "XYZ": {
+                    "ohlc": [
+                        [
+                            1754472600000,
+                            40.13,
+                            40.13,
+                            39.99,
+                            39.99
+                        ],
+                        [
+                            1754472660000,
+                            40.27,
+                            40.27,
+                            40.27,
+                            40.27
+                        ],
+                        [
+                            1754481060000,
+                            41.19,
+                            41.2,
+                            41.19,
+                            41.2
+                        ],
+                        [
+                            1754492220000,
+                            41.59,
+                            41.59,
+                            41.59,
+                            41.59
+                        ]
+                    ],
+                    "vol": [
+                        [
+                            1754472600000,
+                            331
+                        ],
+                        [
+                            1754472660000,
+                            259
+                        ],
+                        [
+                            1754481060000,
+                            400
+                        ],
+                        [
+                            1754492220000,
+                            250
+                        ]
+                    ],
+                    "prev_close": 40.34
+                },
+                "ABCD": {
+                    "ohlc": [
+                        [
+                            1754472600000,
+                            55.61,
+                            55.69,
+                            54.67,
+                            54.73
+                        ],
+                        [
+                            1754472660000,
+                            54.75,
+                            55.35,
+                            54.12,
+                            54.17
+                        ],
+                        [
+                            1754475600000,
+                            53.32,
+                            53.39,
+                            52.97,
+                            52.97
+                        ],
+                        [
+                            1754478600000,
+                            52,
+                            52.01,
+                            51.91,
+                            51.91
+                        ],
+                        [
+                            1754481600000,
+                            52.05,
+                            52.06,
+                            52,
+                            52
+                        ],
+                        [
+                            1754484600000,
+                            51.18,
+                            51.19,
+                            51.11,
+                            51.11
+                        ],
+                        [
+                            1754487600000,
+                            51.53,
+                            51.53,
+                            51.44,
+                            51.44
+                        ],
+                        [
+                            1754490600000,
+                            50.93,
+                            51.18,
+                            50.93,
+                            51.16
+                        ],
+                        [
+                            1754493600000,
+                            50.58,
+                            50.61,
+                            50.56,
+                            50.6
+                        ]
+                    ],
+                    "vol": [
+                        [
+                            1754472600000,
+                            58347
+                        ],
+                        [
+                            1754472660000,
+                            21497
+                        ],
+                        [
+                            1754475600000,
+                            16685
+                        ],
+                        [
+                            1754478600000,
+                            4232
+                        ],
+                        [
+                            1754481600000,
+                            19443
+                        ],
+                        [
+                            1754484600000,
+                            2720
+                        ],
+                        [
+                            1754487600000,
+                            3544
+                        ],
+                        [
+                            1754490600000,
+                            3414
+                        ],
+                        [
+                            1754493600000,
+                            4192
+                        ]
+                    ],
+                    "prev_close": 55.52
+                }
+            }
+        }"#;
+
+        let response: MohlcResponse = serde_json::from_str(raw_json).unwrap();
+        assert_eq!(response.status_code, StatusCode::OK);
+
+        if let Some(result) = response.result {
+            assert!(result.contains_key("XYZ"));
+            assert!(result.contains_key("ABCD"));
+            let xyz_ohlc = &result["XYZ"];
+            assert_eq!(xyz_ohlc.ohlc.len(), 4);
+            assert_eq!(xyz_ohlc.vol.len(), 4);
+            assert_eq!(xyz_ohlc.prev_close, 40.34);
+        } else {
+            panic!("Expected result to be present");
         }
     }
 }
