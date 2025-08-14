@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind, Result};
-use crate::models::session::LoginErrorResponse;
+use crate::models::session::ErrorResponse;
 use crate::session::FtCreds;
 use crate::url::{ACCESS_TOKEN, USER_AGENT};
 use axum::http::HeaderMap;
@@ -58,7 +58,7 @@ pub(crate) async fn handle_failed_response(resp: Response) -> Error {
         _ => ErrorKind::Unexpected,
     };
 
-    let (message, login_err) = serde_json::from_str::<LoginErrorResponse>(&body)
+    let (message, login_err) = serde_json::from_str::<ErrorResponse>(&body)
         .map(|login_err| (format!("{login_err:?}"), Some(login_err)))
         .unwrap_or_else(|_| (body.to_string(), None));
 

@@ -391,6 +391,7 @@ mod tests {
         assert_eq!(position.total_gainloss_percent, 43.8973);
     }
 
+    #[test]
     fn test_balance_deserialization() {
         let json_data = json!(
                             {

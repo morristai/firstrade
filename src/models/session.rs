@@ -11,7 +11,7 @@ pub(crate) struct LoginMfaRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub(crate) struct LoginErrorResponse {
+pub(crate) struct ErrorResponse {
     #[serde(rename = "statusCode")]
     #[serde(with = "http_serde::status_code")]
     pub status_code: StatusCode,
@@ -146,10 +146,11 @@ mod tests {
         } else {
             panic!("Expected LoginResponse::Otp");
         }
+    }
 
-        #[test]
-        fn test_longin_mfa_deserialization() {
-            let json_data = json!(
+    #[test]
+    fn test_longin_mfa_deserialization() {
+        let json_data = json!(
             {
                 "statusCode": 200,
                 "error": "",
@@ -158,21 +159,21 @@ mod tests {
                 "mfa": true
             });
 
-            let response: LoginResponse = serde_json::from_value(json_data).unwrap();
-            if let LoginResponse::Mfa(init_response) = response {
-                assert_eq!(init_response.status_code, 200);
-                assert_eq!(init_response.error, "");
-                assert_eq!(init_response.message, "Normal");
-                assert_eq!(init_response.t_token, "073e8a2ae7331c32e8b0c12004248e00");
-                assert_eq!(init_response.mfa, true);
-            } else {
-                panic!("Expected LoginResponse::Init");
-            }
+        let response: LoginResponse = serde_json::from_value(json_data).unwrap();
+        if let LoginResponse::Mfa(init_response) = response {
+            assert_eq!(init_response.status_code, 200);
+            assert_eq!(init_response.error, "");
+            assert_eq!(init_response.message, "Normal");
+            assert_eq!(init_response.t_token, "073e8a2ae7331c32e8b0c12004248e00");
+            assert_eq!(init_response.mfa, true);
+        } else {
+            panic!("Expected LoginResponse::Init");
         }
+    }
 
-        #[test]
-        fn test_login_verified_deserialization() {
-            let json_data = json!(
+    #[test]
+    fn test_login_verified_deserialization() {
+        let json_data = json!(
                 {
                 "statusCode": 200,
                 "error": "",
@@ -188,21 +189,20 @@ mod tests {
                 "nls_quote": true
             });
 
-            let response: LoginResponse = serde_json::from_value(json_data).unwrap();
-            if let LoginResponse::Verify(verify_response) = response {
-                assert_eq!(verify_response.status_code, 200);
-                assert_eq!(
-                    verify_response.sid,
-                    "87DEF0CF1D54F7F208CD486F9B025CF101E8D0F4DDEC54E24F414C1F1187E302"
-                );
-                assert_eq!(
-                    verify_response.ftat,
-                    "3B3812FC07A431A911A193C5CA1D8A63B184D6E88FA3DAC4CE4DA7D703DBC9C0"
-                );
-                assert_eq!(verify_response.realtime_quote, true);
-            } else {
-                panic!("Expected LoginResponse::Verify");
-            }
+        let response: LoginResponse = serde_json::from_value(json_data).unwrap();
+        if let LoginResponse::Verify(verify_response) = response {
+            assert_eq!(verify_response.status_code, 200);
+            assert_eq!(
+                verify_response.sid,
+                "87DEF0CF1D54F7F208CD486F9B025CF101E8D0F4DDEC54E24F414C1F1187E302"
+            );
+            assert_eq!(
+                verify_response.ftat,
+                "3B3812FC07A431A911A193C5CA1D8A63B184D6E88FA3DAC4CE4DA7D703DBC9C0"
+            );
+            assert_eq!(verify_response.realtime_quote, true);
+        } else {
+            panic!("Expected LoginResponse::Verify");
         }
     }
 }

@@ -2,6 +2,11 @@
 name = "firstrade"
 version = "0.1.0"
 edition = "2024"
+description = "A SDK for the Firstrade API"
+license = "Apache-2.0"
+repository = "https://github.com/morristai/firstrade"
+documentation = "https://docs.rs/firstrade"
+readme = "README.md"
 
 [dependencies]
 derive_more = { version = "2.0.1", features = ["from"] }
