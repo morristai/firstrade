@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -140,6 +141,10 @@ pub struct PositionItem {
     pub gainloss: f64,
     pub gainloss_percent: f64,
     pub symbol: String,
+    // NOTE: for option parse result
+    pub expiration_date: Option<DateTime<Utc>>,
+    pub strike_price: Option<f64>,
+    pub is_call: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize)]
