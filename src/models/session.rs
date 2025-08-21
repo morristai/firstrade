@@ -151,13 +151,13 @@ mod tests {
     #[test]
     fn test_longin_mfa_deserialization() {
         let json_data = json!(
-            {
-                "statusCode": 200,
-                "error": "",
-                "message": "Normal",
-                "t_token": "073e8a2ae7331c32e8b0c12004248e00",
-                "mfa": true
-            });
+        {
+            "statusCode": 200,
+            "error": "",
+            "message": "Normal",
+            "t_token": "073e8a2ae7331c32e8b0c12004248e00",
+            "mfa": true
+        });
 
         let response: LoginResponse = serde_json::from_value(json_data).unwrap();
         if let LoginResponse::Mfa(init_response) = response {
@@ -174,20 +174,20 @@ mod tests {
     #[test]
     fn test_login_verified_deserialization() {
         let json_data = json!(
-                {
-                "statusCode": 200,
-                "error": "",
-                "message": "Normal",
-                "sid": "87DEF0CF1D54F7F208CD486F9B025CF101E8D0F4DDEC54E24F414C1F1187E302",
-                "ftat": "3B3812FC07A431A911A193C5CA1D8A63B184D6E88FA3DAC4CE4DA7D703DBC9C0",
-                "onbehalf_id": "FT00087291",
-                "eui": "A_9A32677D15A930269279AA9F09FADB263F34859556C0D9901062C9B18318D911",
-                "realtime_quote": true,
-                "streaming_quote": false,
-                "real_time_index_quotes_status": true,
-                "real_time_watchlist_quote": true,
-                "nls_quote": true
-            });
+            {
+            "statusCode": 200,
+            "error": "",
+            "message": "Normal",
+            "sid": "87DEF0CF1D54F7F208CD486F9B025CF101E8D0F4DDEC54E24F414C1F1187E302",
+            "ftat": "3B3812FC07A431A911A193C5CA1D8A63B184D6E88FA3DAC4CE4DA7D703DBC9C0",
+            "onbehalf_id": "FT00087291",
+            "eui": "A_9A32677D15A930269279AA9F09FADB263F34859556C0D9901062C9B18318D911",
+            "realtime_quote": true,
+            "streaming_quote": false,
+            "real_time_index_quotes_status": true,
+            "real_time_watchlist_quote": true,
+            "nls_quote": true
+        });
 
         let response: LoginResponse = serde_json::from_value(json_data).unwrap();
         if let LoginResponse::Verify(verify_response) = response {

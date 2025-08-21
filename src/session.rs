@@ -235,16 +235,13 @@ impl FtSession {
             .form(&body)
             .send()
             .await
-            .map_err(|e| {
-                Error::new(ErrorKind::Unexpected, "Failed to send login request")
-                    .with_context("response", e.to_string())
-            })?;
+            .map_err(|e| Error::new(ErrorKind::Unexpected, "Fail to send initial login").set_source(e))?;
 
         if !response.status().is_success() {
             return Err(handle_failed_response(response).await);
         }
 
-        let body = response.text().await.map_err(read_response_error)?;
+        let body = response.text().await.map_err(parse_reqwest_error)?;
         let data: LoginResponse = serde_json::from_str(&body).map_err(parse_json_error)?;
         Self::login_verify(self, data).await?;
         Ok(())
@@ -258,11 +255,11 @@ impl FtSession {
                 unimplemented!()
             }
             LoginResponse::Mfa(data) => {
-                log::debug!("using MFA for login");
                 let t_token = data.t_token;
                 let mfa_code = self.ft_config.mfa_code.clone().ok_or(login_credential_error(
-                    "possible ftat is expired, need mfa to re-login",
+                    "Possible ftat is expired, need mfa to re-login",
                 ))?;
+                log::info!("using MFA code: {} for login", mfa_code);
 
                 let body = LoginMfaRequest::builder()
                     .t_token(t_token)
@@ -278,14 +275,13 @@ impl FtSession {
                     .send()
                     .await
                     .map_err(|e| {
-                        Error::new(ErrorKind::Unexpected, "Failed to send login request")
-                            .with_context("response", e.to_string())
+                        Error::new(ErrorKind::Unexpected, "Failed to send mfa login request").set_source(e)
                     })?;
 
                 if !response.status().is_success() {
                     return Err(handle_failed_response(response).await);
                 }
-                let body = response.text().await.map_err(read_response_error)?;
+                let body = response.text().await.map_err(parse_reqwest_error)?;
                 let data: LoginResponse = serde_json::from_str(&body).map_err(parse_json_error)?;
                 Ok(Self::login_verify(self, data).await?)
             }
@@ -318,15 +314,15 @@ impl FtSession {
             let mut headers = HeaderMap::new();
             headers.insert(
                 "ftat",
-                HeaderValue::from_str(&ft_creds.ftat.0).map_err(request_header_error)?,
+                HeaderValue::from_str(&ft_creds.ftat.0).map_err(parse_request_header_error)?,
             );
             headers.insert(
                 "sid",
-                HeaderValue::from_str(&ft_creds.sid.0).map_err(request_header_error)?,
+                HeaderValue::from_str(&ft_creds.sid.0).map_err(parse_request_header_error)?,
             );
             headers.insert(
                 "access-token",
-                HeaderValue::from_str(ACCESS_TOKEN).map_err(request_header_error)?,
+                HeaderValue::from_str(ACCESS_TOKEN).map_err(parse_request_header_error)?,
             );
 
             let response = self
@@ -336,14 +332,13 @@ impl FtSession {
                 .send()
                 .await
                 .map_err(|e| {
-                    Error::new(ErrorKind::Unexpected, "Failed to send get_account_list request")
-                        .with_context("response", e.to_string())
+                    Error::new(ErrorKind::Unexpected, "Failed to send get_account_list request").set_source(e)
                 })?;
 
             if !response.status().is_success() {
                 return Err(handle_failed_response(response).await);
             }
-            let body = response.text().await.map_err(read_response_error)?;
+            let body = response.text().await.map_err(parse_reqwest_error)?;
             let data: AccountList = serde_json::from_str(&body).map_err(parse_json_error)?;
 
             Ok(data)

@@ -1,5 +1,5 @@
-use crate::error::{Error, ErrorKind, Result};
-use crate::models::account::{AccountHistory, AccountList, Balance, Position, UserInfo};
+use crate::error::Result;
+use crate::models::account::{AccountHistory, AccountList, Balance, Positions, UserInfo};
 use crate::models::company::*;
 use crate::models::quote::*;
 use crate::models::session::LoginVerifiedResponse;
@@ -137,16 +137,9 @@ impl FtAccount {
 
 impl FtAccount {
     pub async fn get_market_time(&self) -> Result<MarketTimeResponse> {
-        let response = self.client.get(market_time()).send().await.map_err(|e| {
-            Error::new(ErrorKind::Unexpected, "Failed to send get_market_time request")
-                .with_context("response", e.to_string())
-        })?;
-        if !response.status().is_success() {
-            return Err(handle_failed_response(response).await);
-        }
-        let body = response.text().await.map_err(read_response_error)?;
-        let data = serde_json::from_str(&body).map_err(parse_json_error)?;
-        Ok(data)
+        let url = market_time();
+        let cred = self.cred.read().await;
+        get_with_auth(&self.client, url, &cred).await
     }
 
     pub async fn get_account_list(&self) -> Result<AccountList> {
@@ -161,7 +154,7 @@ impl FtAccount {
         get_with_auth(&self.client, url, &cred).await
     }
 
-    pub async fn get_account_positions(&self) -> Result<Position> {
+    pub async fn get_account_positions(&self) -> Result<Positions> {
         let url = account_positions(self.account_id.as_str());
         let cred = self.cred.read().await;
         get_with_auth(&self.client, url, &cred).await
