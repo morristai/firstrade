@@ -67,7 +67,7 @@ pub struct Menu {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Position {
+pub struct Positions {
     #[serde(rename = "statusCode")]
     #[serde(with = "http_serde::status_code")]
     pub status_code: StatusCode,
@@ -387,7 +387,7 @@ mod tests {
           "pagination": {}
         });
 
-        let position: Position = serde_json::from_value(json_data).unwrap();
+        let position: Positions = serde_json::from_value(json_data).unwrap();
         assert_eq!(position.status_code, 200);
         assert_eq!(position.items.len(), 2);
         assert_eq!(position.items[0].symbol, "ABCD260116C00003000");

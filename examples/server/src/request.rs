@@ -3,7 +3,7 @@ use crate::utils::AppError;
 use anyhow::{Result, anyhow};
 use axum::Json;
 use axum::extract::{Path, State};
-use firstrade::models::account::{AccountHistory, AccountList, BalanceResult, Position, UserInfo};
+use firstrade::models::account::{AccountHistory, AccountList, BalanceResult, Positions, UserInfo};
 use firstrade::models::quote::MarketTimeResponse;
 use firstrade::models::watchlist::*;
 
@@ -22,7 +22,7 @@ pub(crate) async fn user_info(State(state): State<AppState>) -> Result<Json<User
     Ok(Json(user_info))
 }
 
-pub(crate) async fn account_position(State(state): State<AppState>) -> Result<Json<Position>, AppError> {
+pub(crate) async fn account_position(State(state): State<AppState>) -> Result<Json<Positions>, AppError> {
     let position = state.ft_client.get_account_positions().await?;
     Ok(Json(position))
 }

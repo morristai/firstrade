@@ -24,8 +24,8 @@ pub(crate) fn build_default_https_client() -> HttpClient {
 }
 
 #[inline]
-pub(crate) fn request_header_error(err: InvalidHeaderValue) -> Error {
-    Error::new(ErrorKind::ConfigInvalid, "configuring request headers").with_context("error", err)
+pub(crate) fn parse_request_header_error(err: InvalidHeaderValue) -> Error {
+    Error::new(ErrorKind::ConfigInvalid, err.to_string()).set_source(err)
 }
 
 #[inline]
@@ -34,19 +34,20 @@ pub(crate) fn login_credential_error(field: &str) -> Error {
 }
 
 #[inline]
-pub(crate) fn read_response_error(err: reqwest::Error) -> Error {
-    Error::new(ErrorKind::Unexpected, "reading response body").with_context("error", err)
+pub(crate) fn parse_reqwest_error(err: reqwest::Error) -> Error {
+    Error::new(ErrorKind::Unexpected, err.to_string()).set_source(err)
 }
 
 #[inline]
 pub(crate) fn parse_json_error(err: serde_json::Error) -> Error {
-    Error::new(ErrorKind::Unexpected, "parsing response").with_context("response_body", err)
+    Error::new(ErrorKind::Unexpected, "parsing response").set_source(err)
 }
 
+// NOTE: Firstrade server return non-200 body with 200 status code,
 pub(crate) async fn handle_failed_response(resp: Response) -> Error {
     let status = resp.status().as_u16();
     let url = resp.url().clone();
-    let body = match resp.text().await.map_err(read_response_error) {
+    let body = match resp.text().await.map_err(parse_reqwest_error) {
         Ok(b) => b,
         Err(err) => return err,
     };
@@ -70,10 +71,9 @@ pub(crate) async fn handle_failed_response(resp: Response) -> Error {
         };
     }
 
-    let mut err = Error::new(kind, message);
-    err = err.with_context("url", format!("{url:?}"));
-
-    err
+    Error::new(kind, "request failed")
+        .with_context("url", format!("{url:?}"))
+        .with_context("message", message)
 }
 
 pub(crate) async fn get_with_auth<T: DeserializeOwned>(
@@ -85,15 +85,18 @@ pub(crate) async fn get_with_auth<T: DeserializeOwned>(
     headers.insert("ftat", HeaderValue::from_str(cred.ftat.as_str()).unwrap());
     headers.insert("sid", HeaderValue::from_str(cred.sid.as_str()).unwrap());
 
-    let response = client.get(url).headers(headers).send().await.map_err(|e| {
-        Error::new(ErrorKind::Unexpected, "Failed to send request").with_context("response", e.to_string())
-    })?;
+    let response = client
+        .get(url)
+        .headers(headers)
+        .send()
+        .await
+        .map_err(|e| Error::new(ErrorKind::Unexpected, "Failed to send request").set_source(e))?;
 
     if !response.status().is_success() {
         return Err(handle_failed_response(response).await);
     }
 
-    let body = response.text().await.map_err(read_response_error)?;
+    let body = response.text().await.map_err(parse_reqwest_error)?;
     let data = serde_json::from_str(&body).map_err(parse_json_error)?;
     Ok(data)
 }
@@ -116,14 +119,15 @@ pub(crate) async fn post_with_auth<T: DeserializeOwned>(
         .await
         .map_err(|e| {
             Error::new(ErrorKind::Unexpected, "Failed to send request")
-                .with_context("response", e.to_string())
+                .with_context("url", e.url().unwrap())
+                .set_source(e)
         })?;
 
     if !response.status().is_success() {
         return Err(handle_failed_response(response).await);
     }
 
-    let body = response.text().await.map_err(read_response_error)?;
+    let body = response.text().await.map_err(parse_reqwest_error)?;
     let data = serde_json::from_str(&body).map_err(parse_json_error)?;
     Ok(data)
 }
@@ -138,14 +142,16 @@ pub(crate) async fn delete_with_auth<T: DeserializeOwned>(
     headers.insert("sid", HeaderValue::from_str(cred.sid.as_str()).unwrap());
 
     let response = client.delete(url).headers(headers).send().await.map_err(|e| {
-        Error::new(ErrorKind::Unexpected, "Failed to send request").with_context("response", e.to_string())
+        Error::new(ErrorKind::Unexpected, "Failed to send request")
+            .with_context("url", e.url().unwrap())
+            .set_source(e)
     })?;
 
     if !response.status().is_success() {
         return Err(handle_failed_response(response).await);
     }
 
-    let body = response.text().await.map_err(read_response_error)?;
+    let body = response.text().await.map_err(parse_reqwest_error)?;
     let data = serde_json::from_str(&body).map_err(parse_json_error)?;
     Ok(data)
 }
