@@ -107,7 +107,7 @@ pub struct StockQuote {
     pub shares: u64,
 }
 
-// ==================== Stock OHLC ====================
+// ==================== Stocks MOHLC ====================
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MohlcResponse {
     #[serde(rename = "statusCode")]
@@ -122,23 +122,37 @@ pub struct MohlcResponse {
 pub struct StockOhlc {
     pub ohlc: Vec<OhlcEntry>,
     pub vol: Vec<VolEntry>,
-    pub prev_close: f64,
+    pub prev_close: Option<f64>,
+    pub range: Option<String>,
+    pub symbol: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OhlcEntry(
     #[serde(deserialize_with = "from_milli_ts")] pub DateTime<Utc>,
-    pub f64,
-    pub f64,
-    pub f64,
-    pub f64,
+    pub f64,                           // open
+    pub f64,                           // high
+    pub f64,                           // low
+    pub f64,                           // close
+    #[serde(default)] pub Option<u64>, // NOTE: volume only exists in OhlcResponse
 );
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolEntry(
     #[serde(deserialize_with = "from_milli_ts")] pub DateTime<Utc>,
-    pub f64,
+    pub u64,
 );
+
+// ==================== Single Stock OHLC ====================
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OhlcResponse {
+    #[serde(rename = "statusCode")]
+    #[serde(with = "http_serde::status_code")]
+    pub status_code: StatusCode,
+    pub error: String,
+    pub message: String,
+    pub result: Option<StockOhlc>,
+}
 
 #[cfg(test)]
 mod tests {
@@ -268,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn test_stock_ohlc_response() {
+    fn test_stocks_mohlc_response() {
         let raw_json = r#"{
             "statusCode": 200,
             "error": "",
@@ -443,7 +457,96 @@ mod tests {
             let xyz_ohlc = &result["XYZ"];
             assert_eq!(xyz_ohlc.ohlc.len(), 4);
             assert_eq!(xyz_ohlc.vol.len(), 4);
-            assert_eq!(xyz_ohlc.prev_close, 40.34);
+            assert_eq!(xyz_ohlc.prev_close.unwrap(), 40.34);
+        } else {
+            panic!("Expected result to be present");
+        }
+    }
+
+    #[test]
+    fn test_stock_ohlc_response() {
+        let raw_json = r#"{
+            "statusCode": 200,
+            "error": "",
+            "message": "Normal",
+            "result": {
+                "ohlc": [
+                    [
+                        1755475200000,
+                        48.24,
+                        50.5,
+                        47.4,
+                        48.16,
+                        9695413
+                    ],
+                    [
+                        1755561600000,
+                        47.735,
+                        48.399,
+                        44.88,
+                        44.95,
+                        8294834
+                    ],
+                    [
+                        1755648000000,
+                        44.25,
+                        45.25,
+                        42,
+                        45.08,
+                        7072843
+                    ],
+                    [
+                        1755734400000,
+                        44.33,
+                        45.165,
+                        43.61,
+                        44.98,
+                        3457791
+                    ],
+                    [
+                        1755820800000,
+                        44.93,
+                        47.47,
+                        44.19,
+                        47.07,
+                        6388142
+                    ]
+                ],
+                "vol": [
+                    [
+                        1755475200000,
+                        9695413
+                    ],
+                    [
+                        1755561600000,
+                        8294834
+                    ],
+                    [
+                        1755648000000,
+                        7072843
+                    ],
+                    [
+                        1755734400000,
+                        3457791
+                    ],
+                    [
+                        1755820800000,
+                        6388142
+                    ]
+                ],
+                "range": "1w",
+                "symbol": "ASTS"
+            }
+        }"#;
+
+        let response: OhlcResponse = serde_json::from_str(raw_json).unwrap();
+        assert_eq!(response.status_code, StatusCode::OK);
+
+        if let Some(result) = response.result {
+            assert_eq!(result.symbol.as_deref().unwrap(), "ASTS");
+            assert_eq!(result.ohlc.len(), 5);
+            assert_eq!(result.vol.len(), 5);
+            assert_eq!(result.range.unwrap(), "1w");
         } else {
             panic!("Expected result to be present");
         }

@@ -17,7 +17,7 @@ pub struct Fundamental {
     pub high: f64,
     pub low: f64,
     pub analyst_report: Option<AnalystReport>,
-    pub industry: String,
+    pub industry: Option<String>,
     pub rating: Option<i64>,
     pub fairvalue: Option<i64>,
     pub consider_buy: Option<i64>,
@@ -25,22 +25,22 @@ pub struct Fundamental {
     pub uncertainty: Option<String>,
     pub economic_moat: Option<String>,
     pub stewardship: Option<String>,
-    pub total_return_3m: f64,
+    pub total_return_3m: Option<f64>,
     pub pe: Option<f64>,
-    pub eps: f64,
-    pub symbol: String,
-    pub prev_close: f64,
-    pub ms_exch: String,
-    pub equity_type: String,
-    pub hi_52wk: f64,
-    pub hi_date_52wk: String,
-    pub low_52wk: f64,
-    pub low_date_52wk: String,
-    pub dividend_yield: f64,
-    pub beta: f64,
-    pub mkt_cap: i64,
-    pub shares_outstanding: i64,
-    pub ex_date: String,
+    pub eps: Option<f64>,
+    pub symbol: Option<String>,
+    pub prev_close: Option<f64>,
+    pub ms_exch: Option<String>,
+    pub equity_type: Option<String>,
+    pub hi_52wk: Option<f64>,
+    pub hi_date_52wk: Option<String>,
+    pub low_52wk: Option<f64>,
+    pub low_date_52wk: Option<String>,
+    pub dividend_yield: Option<f64>,
+    pub beta: Option<f64>,
+    pub mkt_cap: Option<i64>,
+    pub shares_outstanding: Option<i64>,
+    pub ex_date: Option<String>,
     pub avg_vol_1m: Option<i64>,
     pub mkt_return_1m: Option<i64>,
     pub yield_1y: Option<i64>,
@@ -48,13 +48,13 @@ pub struct Fundamental {
     pub pgx_ratio: Option<i64>,
     pub pe_ratio: Option<f64>,
     pub pb_ratio: Option<f64>,
-    pub open: f64,
+    pub open: Option<f64>,
     pub return_1y: Option<i64>,
-    pub avg_vol_3m: i64,
-    pub net_margin: f64,
-    pub diluted_eps: f64,
-    pub forward_pe: f64,
-    pub dividend_ytd: Option<f64>,
+    pub avg_vol_3m: Option<i64>,
+    pub net_margin: Option<f64>,
+    pub diluted_eps: Option<f64>,
+    pub forward_pe: Option<f64>,
+    pub dividend_ytd: Option<f64>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -209,9 +209,9 @@ mod tests {
         assert_eq!(response.status_code, StatusCode::OK);
         assert!(response.result.is_some());
         let result = response.result.unwrap();
-        assert_eq!(result.symbol, "AAPL");
+        assert_eq!(result.symbol.unwrap(), "AAPL");
         assert_eq!(result.pe.unwrap(), 31.61000061035156);
-        assert_eq!(result.eps, 6.59);
-        assert_eq!(result.dividend_yield, 0.488);
+        assert_eq!(result.eps.unwrap(), 6.59);
+        assert_eq!(result.dividend_yield.unwrap(), 0.488);
     }
 }
