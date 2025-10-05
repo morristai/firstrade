@@ -202,8 +202,14 @@ impl FtAccount {
         get_with_auth(&self.client, url, &cred).await
     }
 
-    pub async fn get_stock_mohlc(&self, symbols: String, resolution: u8) -> Result<MohlcResponse> {
-        let url = stock_mohlc(symbols.as_str(), resolution);
+    pub async fn get_stock_ohlc(&self, symbols: String, range: String) -> Result<OhlcResponse> {
+        let url = stock_ohlc(symbols.as_str(), &range);
+        let cred = self.cred.read().await;
+        get_with_auth(&self.client, url, &cred).await
+    }
+
+    pub async fn get_stocks_mohlc(&self, symbols: String, resolution: u8) -> Result<MohlcResponse> {
+        let url = stocks_mohlc(symbols.as_str(), resolution);
         let cred = self.cred.read().await;
         get_with_auth(&self.client, url, &cred).await
     }

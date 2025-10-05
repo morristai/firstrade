@@ -103,6 +103,12 @@ pub fn corp_calendar(symbol: &str) -> String {
 // e.g. "AAPL,GOOGL,MSFT"
 // resolution must be less than or equal to 50
 #[inline(always)]
-pub fn stock_mohlc(symbols: &str, resolution: u8) -> String {
+pub fn stocks_mohlc(symbols: &str, resolution: u8) -> String {
     format!("{FT_HOST}/public/mohlc?symbols={symbols}&resolution={resolution}")
+}
+
+// NOTE: range must be one of [1h, 1d, 24h, 1w, 1m, 3m, 1y, 5y, ytd, all]
+#[inline(always)]
+pub fn stock_ohlc(symbols: &str, range: &str) -> String {
+    format!("{FT_HOST}/public/ohlc?symbol={symbols}&range={range}&_v=v2")
 }
